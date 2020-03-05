@@ -1,6 +1,7 @@
 <?php
 
-class Product {
+class Product
+{
 
     // database connection and table name
     private $conn;
@@ -15,12 +16,14 @@ class Product {
     public $created;
 
     // constructor with $db as database connection
-    public function __construct($db) {
+    public function __construct($db)
+    {
         $this->conn = $db;
     }
 
     // read products
-    function read() {
+    function read()
+    {
 
         // select all query
         $query = "SELECT
@@ -43,7 +46,8 @@ class Product {
     }
 
     // create product
-    function create() {
+    function create()
+    {
 
         // query to insert record
         $query = "INSERT INTO
@@ -76,8 +80,86 @@ class Product {
         return false;
     }
 
+    // used when filling up the update product form
+    function readOne()
+    {
+
+        // query to read single record
+        $query = "SELECT
+                c.name as category_name, p.id, p.name, p.description, p.price, p.category_id, p.created
+            FROM
+                " . $this->table_name . " p
+                LEFT JOIN
+                    categories c
+                        ON p.category_id = c.id
+            WHERE
+                p.id = ?
+            LIMIT
+                0,1";
+
+        // prepare query statement
+        $stmt = $this->conn->prepare($query);
+
+        // bind id of product to be updated
+        $stmt->bindParam(1, $this->id);
+
+        // execute query
+        $stmt->execute();
+
+        // get retrieved row
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // set values to object properties
+        $this->name = $row['name'];
+        $this->price = $row['price'];
+        $this->description = $row['description'];
+        $this->category_id = $row['category_id'];
+        $this->category_name = $row['category_name'];
+    }
+
+    // update the product
+    function update()
+    {
+
+        // update query
+        $query = "UPDATE
+                " . $this->table_name . "
+            SET
+                name = :name,
+                price = :price,
+                description = :description,
+                category_id = :category_id
+            WHERE
+                id = :id";
+
+        // prepare query statement
+        $stmt = $this->conn->prepare($query);
+
+        // sanitize
+        $this->name = htmlspecialchars(strip_tags($this->name));
+        $this->price = htmlspecialchars(strip_tags($this->price));
+        $this->description = htmlspecialchars(strip_tags($this->description));
+        $this->category_id = htmlspecialchars(strip_tags($this->category_id));
+        $this->id = htmlspecialchars(strip_tags($this->id));
+
+        // bind new values
+        $stmt->bindParam(':name', $this->name);
+        $stmt->bindParam(':price', $this->price);
+        $stmt->bindParam(':description', $this->description);
+        $stmt->bindParam(':category_id', $this->category_id);
+        $stmt->bindParam(':id', $this->id);
+
+        // execute the query
+        if ($stmt->execute()) {
+            return true;
+        }
+
+        return false;
+    }
+
     // delete the product
-    function delete() {
+    function delete()
+    {
 
         // delete query
         $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
@@ -100,7 +182,8 @@ class Product {
     }
 
     // search products
-    function search($keywords) {
+    function search($keywords)
+    {
 
         // select all query
         $query = "SELECT
@@ -134,7 +217,8 @@ class Product {
     }
 
     // read products with pagination
-    public function readPaging($from_record_num, $records_per_page) {
+    public function readPaging($from_record_num, $records_per_page)
+    {
 
         // select query
         $query = "SELECT
@@ -161,8 +245,9 @@ class Product {
         return $stmt;
     }
 
-// used for paging products
-    public function count() {
+    // used for paging products
+    public function count()
+    {
         $query = "SELECT COUNT(*) as total_rows FROM " . $this->table_name . "";
 
         $stmt = $this->conn->prepare($query);
@@ -171,7 +256,4 @@ class Product {
 
         return $row['total_rows'];
     }
-
 }
-
-?>
