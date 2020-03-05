@@ -182,7 +182,7 @@ class Product
     }
 
     // search products
-    function search($keywords)
+    function search($category)
     {
 
         // select all query
@@ -202,13 +202,13 @@ class Product
         $stmt = $this->conn->prepare($query);
 
         // sanitize
-        $keywords = htmlspecialchars(strip_tags($keywords));
-        $keywords = "%{$keywords}%";
+        $category = htmlspecialchars(strip_tags($category));
+        $category = "%{$category}%";
 
         // bind
-        $stmt->bindParam(1, $keywords);
-        $stmt->bindParam(2, $keywords);
-        $stmt->bindParam(3, $keywords);
+        $stmt->bindParam(1, $category);
+        $stmt->bindParam(2, $category);
+        $stmt->bindParam(3, $category);
 
         // execute query
         $stmt->execute();
@@ -255,5 +255,37 @@ class Product
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $row['total_rows'];
+    }
+
+    // EXAMEN Search category
+    function searchCategory($category)
+    {
+
+        // select all query
+        $query = "SELECT
+                c.name as category_name, p.id, p.name, p.description, p.price, p.category_id, p.created
+            FROM
+                " . $this->table_name . " p
+                LEFT JOIN
+                    categories c
+                        ON p.category_id = c.id
+            WHERE
+                p.category_id = ?
+            ORDER BY
+                p.created DESC";
+
+        // prepare query statement
+        $stmt = $this->conn->prepare($query);
+
+        // sanitize
+        $category = htmlspecialchars(strip_tags($category));
+
+        // bind
+        $stmt->bindParam(1, $category);
+
+        // execute query
+        $stmt->execute();
+
+        return $stmt;
     }
 }
